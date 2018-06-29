@@ -1,34 +1,22 @@
 package com.github.lovasoa.replacement;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.*;
+import java.util.SortedMap;
 
-import static java.nio.charset.CodingErrorAction.IGNORE;
-import static java.nio.charset.CodingErrorAction.REPLACE;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ReplacementCharsetTest {
-    private final Charset charset = ReplacementCharset.X_USER_DEFINED;
+    private static final String REPLACEMENT_CHAR = "\ufffd";
+    private static final Charset charset = ReplacementCharset.REPLACEMENT_CHARSET;
 
     @Test
     void testAscii() {
-        assertEncodeDecode("abc!", new byte[]{'a', 'b', 'c', '!'});
-    }
-
-    @Test
-    void testNonPrintable() {
-        assertEncodeDecode("\u0000\u0001\u0002\u0003", new byte[]{0, 1, 2, 3});
-    }
-
-    @Test
-    void testPrivateUseArea() {
-        assertEncodeDecode(
-                "\uF780\uF790\uF7F0\uF7FF",
-                new byte[]{(byte) 0x80, (byte) 0x90, (byte) 0xF0, (byte) 0xFF}
-        );
+        assertDecode(REPLACEMENT_CHAR, new byte[]{'a', 'b', 'c', '!'});
     }
 
     @Test
@@ -36,30 +24,24 @@ class ReplacementCharsetTest {
         byte[] allBytes = new byte[1 << Byte.SIZE];
         for (int i = 0; i < allBytes.length; i++) allBytes[i] = (byte) i;
         String decoded = new String(allBytes, charset);
-        byte[] reencoded = decoded.getBytes(charset);
-        assertArrayEquals(allBytes, reencoded);
+        assertEquals(REPLACEMENT_CHAR, decoded);
     }
 
     @Test
-    void testUnmappableDefault() {
-        // By default, we use the lower byte of the unicode codepoint for all characters
-        assertEncode("a\uF77F\uffff", new byte[]{'a', (byte) 0x7F, (byte) 0xFF});
-    }
+    void testProgressiveDecoding() {
+        CharsetDecoder decoder = charset.newDecoder()
+                .onMalformedInput(CodingErrorAction.REPLACE)
+                .replaceWith(REPLACEMENT_CHAR);
 
-    @Test
-    void testUnmappableIgnore() {
-        // Ignore (skip) invalid code points
-        CharsetEncoder encoder = charset.newEncoder().onUnmappableCharacter(IGNORE);
-        assertEncode("a\uF77F\uffffb\uABCD", new byte[]{'a', 'b'}, encoder);
-    }
-
-    @Test
-    void testUnmappableCustomReplace() {
-        // Ignore (skip) invalid code points
-        CharsetEncoder encoder = charset.newEncoder()
-                .onUnmappableCharacter(REPLACE)
-                .replaceWith(new byte[]{0x66});
-        assertEncode("héé", new byte[]{'h', (byte) 0x66, (byte) 0x66}, encoder);
+        CharBuffer out = CharBuffer.allocate(10);
+        for (int i = 0; i < 1000; i++) {
+            ByteBuffer in = ByteBuffer.wrap(new byte[]{(byte) i});
+            decoder.decode(in, out, false);
+        }
+        decoder.decode(ByteBuffer.allocate(0), out, true);
+        out.flip();
+        CharBuffer expected = CharBuffer.wrap(REPLACEMENT_CHAR);
+        assertEquals(expected, out);
     }
 
     @Test
@@ -69,46 +51,32 @@ class ReplacementCharsetTest {
     }
 
     @Test
-    void testCanEncode() {
-        assertTrue(charset.newEncoder().canEncode("hello"));
-        assertTrue(charset.newEncoder().canEncode("\0\f"));
-        assertTrue(charset.newEncoder().canEncode("\uF780\uF7FF"));
-
-        assertFalse(charset.newEncoder().canEncode("héhé"));
-        assertFalse(charset.newEncoder().canEncode("\uF77F"));
-    }
-
-    @Test
     void testProvider() {
         assertEquals(charset, Charset.forName(charset.name()));
         assertEquals(charset, Charset.forName(charset.name().toUpperCase()));
-        assertTrue(Charset.availableCharsets().values().contains(charset));
         // Ensure our provider did not mess up with existing ones
         assertEquals(StandardCharsets.UTF_8, Charset.forName("UTF-8"));
         assertNotEquals(charset, Charset.forName("x-maccyrillic"));
     }
 
-    private void assertEncodeDecode(String str, byte[] bts) {
-        assertEncode(str, bts);
-        assertDecode(str, bts);
-    }
-
-    private void assertEncode(String str, byte[] bts, CharsetEncoder encoder) {
-        try {
-            CharBuffer charBuffer = CharBuffer.wrap(str);
-            ByteBuffer byteBuffer = encoder.encode(charBuffer);
-            assertEquals(ByteBuffer.wrap(bts), byteBuffer);
-        } catch (CharacterCodingException e) {
-            throw new RuntimeException(e);
+    @Test
+    void testAliases() {
+        SortedMap<String, Charset> available = Charset.availableCharsets();
+        assertTrue(available.values().contains(charset));
+        assertTrue(charset.aliases().contains("iso-2022-kr"), "aliases exist");
+        for (String alias : charset.aliases()) {
+            assertEquals(charset, Charset.forName(alias));
         }
     }
 
-    private void assertEncode(String str, byte[] bts) {
-        final CharsetEncoder encoder = charset
-                .newEncoder()
-                .onUnmappableCharacter(REPLACE)
-                .onMalformedInput(REPLACE);
-        assertEncode(str, bts, encoder);
+    @Test
+    void testNoEncoder() {
+        assertThrows(UnsupportedOperationException.class, new Executable() {
+            @Override
+            public void execute() {
+                charset.newEncoder();
+            }
+        });
     }
 
     private void assertDecode(String str, byte[] bts) {

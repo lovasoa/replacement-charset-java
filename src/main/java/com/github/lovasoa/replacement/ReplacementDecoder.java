@@ -6,17 +6,18 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
 
 public class ReplacementDecoder extends CharsetDecoder {
+    private boolean replacementErrorReturned = false;
+
     ReplacementDecoder() {
-        super(ReplacementCharset.X_USER_DEFINED, 1, 1);
+        super(ReplacementCharset.REPLACEMENT_CHARSET, Float.MIN_VALUE, 1);
     }
 
     @Override
     protected CoderResult decodeLoop(ByteBuffer in, CharBuffer out) {
-        while (true) {
-            if (!in.hasRemaining()) return CoderResult.UNDERFLOW;
-            if (!out.hasRemaining()) return CoderResult.OVERFLOW;
-            byte b = in.get();
-            out.append(ReplacementCharset.decode(b));
+        if (in.hasRemaining() && !replacementErrorReturned) {
+            replacementErrorReturned = true;
+            return CoderResult.malformedForLength(in.remaining());
         }
+        return CoderResult.UNDERFLOW;
     }
 }

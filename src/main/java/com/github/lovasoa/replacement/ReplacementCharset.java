@@ -3,8 +3,6 @@ package com.github.lovasoa.replacement;
 import java.nio.charset.*;
 
 public class ReplacementCharset extends Charset {
-
-    public static final Charset X_USER_DEFINED = new ReplacementCharset();
     private static final String CANONICAL_NAME = "replacement";
     private static final String[] ALIASES = new String[]{
             "csiso2022kr",
@@ -13,6 +11,8 @@ public class ReplacementCharset extends Charset {
             "iso-2022-cn-ext",
             "iso-2022-kr"
     };
+    public static final Charset REPLACEMENT_CHARSET = new ReplacementCharset();
+
 
     private ReplacementCharset() {
         super(CANONICAL_NAME, ALIASES);
@@ -28,14 +28,6 @@ public class ReplacementCharset extends Charset {
     }
 
     public CharsetEncoder newEncoder() {
-        return new ReplacementEncoder();
-    }
-
-    public static char decode(byte b) {
-        return (char) ((b >= 0) ? b : 0xF700 + (b & 0xFF));
-    }
-
-    public static byte encode(char c) {
-        return (byte) (c & 0xFF);
+        throw new UnsupportedOperationException("This charset does not support encoding");
     }
 }

@@ -7,7 +7,7 @@ import java.util.Iterator;
 import static java.util.Collections.singleton;
 
 public class ReplacementCharsetProvider extends CharsetProvider {
-    private static final Charset charset = ReplacementCharset.X_USER_DEFINED;
+    private static final Charset charset = ReplacementCharset.REPLACEMENT_CHARSET;
 
     @Override
     public Iterator<Charset> charsets() {
@@ -16,6 +16,8 @@ public class ReplacementCharsetProvider extends CharsetProvider {
 
     @Override
     public Charset charsetForName(String charsetName) {
-        return charset.name().equalsIgnoreCase(charsetName) ? charset : null;
+        return charset.name().equalsIgnoreCase(charsetName) ||
+                charset.aliases().contains(charsetName)
+                ? charset : null;
     }
 }
