@@ -1,4 +1,4 @@
-package com.github.lovasoa.xuserdefined;
+package com.github.lovasoa.replacement;
 
 import org.junit.jupiter.api.Test;
 
@@ -10,8 +10,8 @@ import static java.nio.charset.CodingErrorAction.IGNORE;
 import static java.nio.charset.CodingErrorAction.REPLACE;
 import static org.junit.jupiter.api.Assertions.*;
 
-class XUserDefinedTest {
-    private final Charset charset = XUserDefined.X_USER_DEFINED;
+class ReplacementCharsetTest {
+    private final Charset charset = ReplacementCharset.X_USER_DEFINED;
 
     @Test
     void testAscii() {

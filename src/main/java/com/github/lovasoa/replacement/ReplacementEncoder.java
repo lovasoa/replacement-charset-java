@@ -1,4 +1,4 @@
-package com.github.lovasoa.xuserdefined;
+package com.github.lovasoa.replacement;
 
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -15,12 +15,12 @@ import static java.nio.charset.CodingErrorAction.REPLACE;
  * This allows the encoder to work slightly faster. Otherwise, ff a custom replacement is set, it
  * will be respected.
  */
-public class XUserDefinedEncoder extends CharsetEncoder {
+public class ReplacementEncoder extends CharsetEncoder {
 
     private boolean hasCustomReplacement = false;
 
-    XUserDefinedEncoder() {
-        super(XUserDefined.X_USER_DEFINED, 1, 1);
+    ReplacementEncoder() {
+        super(ReplacementCharset.X_USER_DEFINED, 1, 1);
     }
 
     @Override
@@ -42,7 +42,7 @@ public class XUserDefinedEncoder extends CharsetEncoder {
             if (!in.hasRemaining()) return CoderResult.UNDERFLOW;
             if (!out.hasRemaining()) return CoderResult.OVERFLOW;
             char c = in.get();
-            if (canEncode(c)) out.put(XUserDefined.encode(c));
+            if (canEncode(c)) out.put(ReplacementCharset.encode(c));
             else {
                 in.position(in.position() - 1); // unread c
                 return CoderResult.unmappableForLength(1);
