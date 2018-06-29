@@ -18,6 +18,12 @@ public class ReplacementDecoder extends CharsetDecoder {
             replacementErrorReturned = true;
             return CoderResult.malformedForLength(in.remaining());
         }
+        in.position(in.limit());
         return CoderResult.UNDERFLOW;
+    }
+
+    @Override
+    protected void implReset() {
+        replacementErrorReturned = false;
     }
 }

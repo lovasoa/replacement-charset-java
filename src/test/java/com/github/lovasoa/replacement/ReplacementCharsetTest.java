@@ -40,12 +40,36 @@ class ReplacementCharsetTest {
 
         CharBuffer out = CharBuffer.allocate(10);
         for (int i = 0; i < 1000; i++) {
-            ByteBuffer in = ByteBuffer.wrap(new byte[]{(byte) i});
+            ByteBuffer in = ByteBuffer.wrap(new byte[]{1, 2, 3, (byte) i});
             decoder.decode(in, out, false);
         }
         decoder.decode(ByteBuffer.allocate(0), out, true);
         out.flip();
         CharBuffer expected = CharBuffer.wrap(REPLACEMENT_CHAR);
+        assertEquals(expected, out);
+    }
+
+    @Test
+    void testReset() {
+        // The decoder is stateful. This test checks that it can be reused by calling its reset method
+        CharsetDecoder decoder = charset.newDecoder()
+                .onMalformedInput(CodingErrorAction.REPLACE)
+                .replaceWith(REPLACEMENT_CHAR);
+
+        CharBuffer out = CharBuffer.allocate(10);
+        ByteBuffer in = ByteBuffer.wrap(new byte[]{1, 2, 3});
+        decoder.decode(in, out, true);
+        out.flip();
+        CharBuffer expected = CharBuffer.wrap(REPLACEMENT_CHAR);
+        assertEquals(expected, out);
+
+        // Reuse the same decoder
+        decoder.reset();
+        out = CharBuffer.allocate(10);
+        in = ByteBuffer.wrap(new byte[]{1, 2, 3});
+        decoder.decode(in, out, true);
+        out.flip();
+        expected = CharBuffer.wrap(REPLACEMENT_CHAR);
         assertEquals(expected, out);
     }
 
