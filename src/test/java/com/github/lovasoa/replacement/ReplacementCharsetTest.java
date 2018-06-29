@@ -61,11 +61,11 @@ class ReplacementCharsetTest {
 
     @Test
     void testAliases() {
+        ReplacementCharsetProvider provider = new ReplacementCharsetProvider();
         SortedMap<String, Charset> available = Charset.availableCharsets();
         assertTrue(available.values().contains(charset));
-        assertTrue(charset.aliases().contains("iso-2022-kr"), "aliases exist");
         for (String alias : charset.aliases()) {
-            assertEquals(charset, Charset.forName(alias));
+            assertEquals(charset, provider.charsetForName(alias));
         }
     }
 
