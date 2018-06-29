@@ -46,7 +46,7 @@ class ReplacementCharsetTest {
 
     @Test
     void testContains() {
-        assertTrue(charset.contains(StandardCharsets.US_ASCII));
+        assertFalse(charset.contains(StandardCharsets.US_ASCII));
         assertFalse(charset.contains(StandardCharsets.UTF_8));
     }
 

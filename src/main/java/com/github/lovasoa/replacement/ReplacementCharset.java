@@ -20,7 +20,7 @@ public class ReplacementCharset extends Charset {
 
     @Override
     public boolean contains(Charset cs) {
-        return cs.equals(StandardCharsets.US_ASCII);
+        return cs.equals(this);
     }
 
     public CharsetDecoder newDecoder() {
