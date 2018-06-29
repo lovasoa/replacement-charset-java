@@ -16,7 +16,12 @@ class ReplacementCharsetTest {
 
     @Test
     void testAscii() {
-        assertDecode(REPLACEMENT_CHAR, new byte[]{'a', 'b', 'c', '!'});
+        assertDecodeToReplacement(new byte[]{'a', 'b', 'c', '!'});
+    }
+
+    @Test
+    void testNonAscii() {
+        assertDecodeToReplacement(new byte[]{-1, -127});
     }
 
     @Test
@@ -79,8 +84,8 @@ class ReplacementCharsetTest {
         });
     }
 
-    private void assertDecode(String str, byte[] bts) {
+    private void assertDecodeToReplacement(byte[] bts) {
         String decodedBts = new String(bts, charset);
-        assertEquals(str, decodedBts);
+        assertEquals("\uFFFD", decodedBts);
     }
 }
